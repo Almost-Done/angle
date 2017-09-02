@@ -11,6 +11,7 @@
 #include "libANGLE/Shader.h"
 
 #include <sstream>
+#include <regex>
 
 #include "common/utilities.h"
 #include "GLSLANG/ShaderLang.h"
@@ -226,6 +227,38 @@ void Shader::getTranslatedSourceWithDebugInfo(GLsizei bufSize, GLsizei *length, 
     getSourceImpl(debugInfo, bufSize, length, buffer);
 }
 
+#ifdef ANGLE_ENABLE_WINDOWS_HOLOGRAPHIC
+// Naive implementation to find the end of a function in HLSL code
+size_t Shader::findShaderFunctionEnd(const std::string source, size_t functionStartIndex)
+{
+    if (source[functionStartIndex] != '{')
+    {
+        // The provided index is not the beginning of a function
+        return std::string::npos;
+    }
+
+    int scopeNestingCount = 1;
+    for (int index = functionStartIndex + 1; index < source.length(); index++)
+    {
+        if (source[index] == '}')
+        {
+            scopeNestingCount--;
+        }
+        else if (source[index] == '{')
+        {
+            scopeNestingCount++;
+        }
+
+        if (scopeNestingCount == 0)
+        {
+            return index;;
+        }
+    }
+
+    return std::string::npos;
+}
+#endif
+
 void Shader::compile(Compiler *compiler)
 {
     mData.mTranslatedSource.clear();
@@ -343,16 +376,28 @@ void Shader::compile(Compiler *compiler)
                 sourceString = modifiedSourceString;
             }
 
-            size_t index1 = sourceString.find("void");
-            size_t index2 = sourceString.find_last_of('}');
-            std::string modifiedSourceString = 
-                sourceString.substr(0, index1) + 
-                (!isGlslesVersion3 ? "out vec4 fragColor;\n " : "") +
-                "in float vRenderTargetArrayIndex;\n " +
-                sourceString.substr(index1, index2-index1) +
-                "    float index = vRenderTargetArrayIndex;\n " +
-                sourceString.substr(index2);
-            sourceString = modifiedSourceString;
+            // Match the main function in the shader
+            std::regex main_function_regex("\\bvoid\\s+main\\s*\\(.*\\)");
+            std::smatch main_function_match;
+            if (std::regex_search(sourceString, main_function_match, main_function_regex))
+            {
+                size_t mainFunctionIndex = main_function_match.position(0);
+                size_t mainFunctionBodyIndex = sourceString.find("{", mainFunctionIndex);
+                if (mainFunctionBodyIndex != std::string::npos)
+                {
+                    size_t mainFunctionEnd = findShaderFunctionEnd(sourceString, mainFunctionBodyIndex);
+                    if (mainFunctionEnd != std::string::npos)
+                    {
+                        std::string modifiedSourceString = sourceString.substr(0, mainFunctionIndex);
+                        modifiedSourceString += (!isGlslesVersion3 ? "out vec4 fragColor;\n " : "");
+                        modifiedSourceString += "in float vRenderTargetArrayIndex;\n ";
+                        modifiedSourceString += sourceString.substr(mainFunctionIndex, mainFunctionEnd - mainFunctionIndex);
+                        modifiedSourceString += "    float index = vRenderTargetArrayIndex;\n ";
+                        modifiedSourceString += sourceString.substr(mainFunctionEnd);
+                        sourceString = modifiedSourceString;
+                    }
+                }
+            }
         }
     }
 #endif
