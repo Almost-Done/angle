@@ -228,8 +228,8 @@ void Shader::getTranslatedSourceWithDebugInfo(GLsizei bufSize, GLsizei *length, 
 }
 
 #ifdef ANGLE_ENABLE_WINDOWS_HOLOGRAPHIC
-// Naive implementation to find the end of a function in HLSL code
-size_t Shader::findShaderFunctionEnd(const std::string source, size_t functionStartIndex)
+// Naive implementation to find the end of a function in GLSL code
+size_t findShaderFunctionEnd(const std::string source, size_t functionStartIndex)
 {
     if (source[functionStartIndex] != '{')
     {
@@ -251,7 +251,7 @@ size_t Shader::findShaderFunctionEnd(const std::string source, size_t functionSt
 
         if (scopeNestingCount == 0)
         {
-            return index;;
+            return index;
         }
     }
 
