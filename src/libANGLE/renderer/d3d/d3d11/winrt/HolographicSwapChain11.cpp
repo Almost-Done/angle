@@ -430,6 +430,11 @@ EGLint HolographicSwapChain11::updateHolographicRenderingParameters()
         result = mHolographicNativeWindow->GetHolographicRenderingParameters(id, spCameraRenderingParameters.GetAddressOf());
     }
 
+    if (!spCameraRenderingParameters)
+    {
+        return EGL_BAD_ACCESS;
+    }
+
     // Update back buffer resources.
     {
         // Get the WinRT object representing the holographic camera's back buffer.
