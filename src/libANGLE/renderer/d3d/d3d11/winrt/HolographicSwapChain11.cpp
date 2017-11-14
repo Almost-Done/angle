@@ -715,7 +715,14 @@ EGLint HolographicSwapChain11::updateHolographicRenderingParameters()
                     if (mUseAutomaticStereoRendering)
                     {
                         DirectX::XMVECTOR determinant;
-                        auto viewProjInverse = XMMatrixInverse(&determinant, XMLoadFloat4x4(viewProj));
+                        DirectX::XMFLOAT4X4 midViewProj;
+                        DirectX::XMStoreFloat4x4(
+                            &midViewProj,
+                            DirectX::XMLoadFloat4x4(reinterpret_cast<DirectX::XMFLOAT4X4*>(&mMidViewMatrix)) *
+                            DirectX::XMLoadFloat4x4(reinterpret_cast<DirectX::XMFLOAT4X4*>(&mMidProjectionMatrix))
+                        );
+
+                        auto viewProjInverse = XMMatrixInverse(&determinant, XMLoadFloat4x4(&midViewProj));
 
                         if (!XMVector4NearEqual(determinant, XMVectorZero(), XMVectorSplatEpsilon()))
                         {
