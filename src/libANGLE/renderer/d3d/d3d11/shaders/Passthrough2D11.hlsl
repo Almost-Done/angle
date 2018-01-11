@@ -11,6 +11,20 @@ void VS_Passthrough2D( in float2  inPosition :    POSITION,  in float2  inTexCoo
     outTexCoord = inTexCoord;
 }
 
+void VS_Passthrough2D_Instanced(in float2  inPosition :    POSITION, in float2  inTexCoord : TEXCOORD0, in unsigned int inInstanceId : SV_InstanceID,
+    out float4 outPosition : SV_POSITION, out float2 outTexCoord : TEXCOORD0, out unsigned int outRtaIndex : SV_RenderTargetArrayIndex)
+{
+    outPosition = float4(inPosition, 0.0f, 1.0f);
+    outTexCoord = inTexCoord;
+    outRtaIndex = inInstanceId;
+}
+
+float4 PS_PassthroughRGBA2D_Instanced(in float4 inPosition : SV_POSITION, in float2 inTexCoord : TEXCOORD0, in unsigned int inRtaIndex : SV_RenderTargetArrayIndex) : SV_TARGET0
+{
+    return TextureF.Sample(Sampler, inTexCoord).rgba;
+}
+
+
 float PS_PassthroughDepth2D(in float4 inPosition : SV_POSITION, in float2 inTexCoord : TEXCOORD0) : SV_DEPTH
 {
     return TextureF.Sample(Sampler, inTexCoord).r;

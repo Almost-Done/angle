@@ -33,6 +33,11 @@ call:BuildShader Clear11.hlsl         VS_ClearFloat            vs_4_0_level_9_3 
 call:BuildShader Clear11.hlsl         PS_ClearFloat_FL9        ps_4_0_level_9_3  compiled\clearfloat11_fl9ps.h        %debug%
 call:BuildShader Clear11.hlsl         PS_ClearFloat            ps_4_0            compiled\clearfloat11ps.h            %debug%
 
+:: Instanced shaders
+::              | Input file          | Entry point           		| Type  | Output file                        	       | Debug |
+call:BuildShader Passthrough2D11.hlsl VS_Passthrough2D_Instanced         vs_4_0  compiled\passthrough2d11vs-Instanced.h         %debug%
+call:BuildShader Passthrough2D11.hlsl PS_PassthroughRGBA2D_Instanced     ps_4_0  compiled\passthroughrgba2d11ps-Instanced.h     %debug%
+
 
 :: Shaders for OpenGL ES 3.0+ only
 ::              | Input file          | Entry point           | Type            | Output file                        | Debug |
