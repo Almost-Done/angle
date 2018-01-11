@@ -4240,6 +4240,9 @@ gl::Error Renderer11::blitRenderbufferRect(const gl::Rectangle &readRectIn,
 
     gl::Error result(GL_NO_ERROR);
 
+    auto srcFmt = readRenderTarget11->getDXGIFormat();
+    auto destFmt = drawRenderTarget11->getDXGIFormat();
+
     if (readRenderTarget11->getDXGIFormat() == drawRenderTarget11->getDXGIFormat() &&
         !stretchRequired && !outOfBounds && !flipRequired && !partialDSBlit &&
         !colorMaskingNeeded && (!(depthBlit || stencilBlit) || wholeBufferCopy))
@@ -4314,8 +4317,22 @@ gl::Error Renderer11::blitRenderbufferRect(const gl::Rectangle &readRectIn,
         {
             // We don't currently support masking off any other channel than alpha
             bool maskOffAlpha = colorMaskingNeeded && colorMask.alpha;
+
+#ifdef ANGLE_ENABLE_WINDOWS_HOLOGRAPHIC
+            // Get the render target.
+            auto renderTarget11 = static_cast<SurfaceRenderTarget11*>(drawRenderTarget);
+            if (renderTarget11 != nullptr && renderTarget11->isHolographic()) {
+                result = mBlit->copyTexture(readSRV, readArea, readSize, drawRTV, drawArea, drawSize,
+                    scissor, destFormatInfo.format, filter, maskOffAlpha, 2);
+            }
+            else {
+                result = mBlit->copyTexture(readSRV, readArea, readSize, drawRTV, drawArea, drawSize,
+                    scissor, destFormatInfo.format, filter, maskOffAlpha, 1);
+            }
+#else       
             result = mBlit->copyTexture(readSRV, readArea, readSize, drawRTV, drawArea, drawSize,
                                         scissor, destFormatInfo.format, filter, maskOffAlpha);
+#endif
         }
     }
 

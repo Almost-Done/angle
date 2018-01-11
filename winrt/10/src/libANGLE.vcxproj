@@ -362,6 +362,8 @@
     <ClInclude Include="..\..\..\src\libANGLE\Query.h" />
     <ClInclude Include="..\..\..\src\libANGLE\RefCountObject.h" />
     <ClInclude Include="..\..\..\src\libANGLE\Renderbuffer.h" />
+    <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\shaders\compiled\passthrough2d11vs-Instanced.h" />
+    <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\shaders\compiled\passthroughrgba2d11ps-Instanced.h" />
     <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\winrt\DepthBufferPlaneFinder\ApplyDepthWeights.h" />
     <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\winrt\DepthBufferPlaneFinder\ApplyLinearSmoothingToLeastSquares.h" />
     <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\winrt\DepthBufferPlaneFinder\DepthBufferPlaneFinder.h" />

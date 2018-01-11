@@ -38,7 +38,8 @@ class Blit11 : angle::NonCopyable
                           const gl::Rectangle *scissor,
                           GLenum destFormat,
                           GLenum filter,
-                          bool maskOffAlpha);
+                          bool maskOffAlpha,
+                          unsigned int instanced = 0);
 
     gl::Error copyStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
                           ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
@@ -87,7 +88,7 @@ class Blit11 : angle::NonCopyable
         BLITSHADER_3D_RI,
         BLITSHADER_3D_ALPHA,
         BLITSHADER_3D_LUMA,
-        BLITSHADER_3D_LUMAALPHA,
+        BLITSHADER_3D_LUMAALPHA
     };
 
     enum SwizzleShaderType
@@ -135,7 +136,7 @@ class Blit11 : angle::NonCopyable
     gl::Error initResources();
     void freeResources();
 
-    ShaderSupport getShaderSupport(const Shader &shader);
+    ShaderSupport getShaderSupport(const Shader &shader, bool isInstanced = false);
 
     static BlitShaderType GetBlitShaderType(GLenum destinationFormat, bool isSigned, ShaderDimension dimension);
     static SwizzleShaderType GetSwizzleShaderType(GLenum type, D3D11_SRV_DIMENSION dimensionality);
@@ -146,7 +147,7 @@ class Blit11 : angle::NonCopyable
 
     void addBlitShaderToMap(BlitShaderType blitShaderType, ShaderDimension dimension, ID3D11PixelShader *ps);
 
-    gl::Error getBlitShader(GLenum destFormat, bool isSigned, ShaderDimension dimension, const Shader **shaderOut);
+    gl::Error getBlitShader(GLenum destFormat, bool isSigned, ShaderDimension dimension, bool isInstanced, const Shader **shaderOut);
     gl::Error getSwizzleShader(GLenum type, D3D11_SRV_DIMENSION viewDimension, const Shader **shaderOut);
 
     void addSwizzleShaderToMap(SwizzleShaderType swizzleShaderType, ShaderDimension dimension, ID3D11PixelShader *ps);
@@ -165,6 +166,9 @@ class Blit11 : angle::NonCopyable
     ID3D11RasterizerState *mScissorEnabledRasterizerState;
     ID3D11RasterizerState *mScissorDisabledRasterizerState;
     ID3D11DepthStencilState *mDepthStencilState;
+
+    d3d11::LazyInputLayout mQuad2DIL_Instanced;
+    d3d11::LazyShader<ID3D11VertexShader> mQuad2DVS_Instanced;
 
     d3d11::LazyInputLayout mQuad2DIL;
     d3d11::LazyShader<ID3D11VertexShader> mQuad2DVS;

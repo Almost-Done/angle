@@ -16,6 +16,9 @@
 #include "libANGLE/renderer/d3d/d3d11/formatutils11.h"
 #include "third_party/trace_event/trace_event.h"
 
+#include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthroughrgba2d11ps-Instanced.h"
+#include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthrough2d11vs-Instanced.h"
+
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthrough2d11vs.h"
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthroughdepth2d11ps.h"
 #include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthroughrgba2d11ps.h"
@@ -237,6 +240,12 @@ Blit11::Blit11(Renderer11 *renderer)
       mScissorEnabledRasterizerState(nullptr),
       mScissorDisabledRasterizerState(nullptr),
       mDepthStencilState(nullptr),
+      mQuad2DIL_Instanced(quad2DLayout,
+                ArraySize(quad2DLayout),
+                g_VS_Passthrough2D_Instanced,
+                ArraySize(g_VS_Passthrough2D_Instanced),
+                "Blit11 2D instanced input layout"),
+      mQuad2DVS_Instanced(g_VS_Passthrough2D_Instanced, ArraySize(g_VS_Passthrough2D_Instanced), "Blit11 2D instanced vertex shader"),
       mQuad2DIL(quad2DLayout,
                 ArraySize(quad2DLayout),
                 g_VS_Passthrough2D,
@@ -581,15 +590,24 @@ Blit11::SwizzleShaderType Blit11::GetSwizzleShaderType(GLenum type, D3D11_SRV_DI
     }
 }
 
-Blit11::ShaderSupport Blit11::getShaderSupport(const Shader &shader)
+Blit11::ShaderSupport Blit11::getShaderSupport(const Shader &shader, bool isInstanced)
 {
     ID3D11Device *device = mRenderer->getDevice();
     ShaderSupport support;
 
     if (shader.dimension == SHADER_2D)
     {
-        support.inputLayout = mQuad2DIL.resolve(device);
-        support.vertexShader = mQuad2DVS.resolve(device);
+        if (isInstanced)
+        {
+            support.inputLayout = mQuad2DIL_Instanced.resolve(device);
+            support.vertexShader = mQuad2DVS_Instanced.resolve(device);
+        }
+        else
+        {
+            support.inputLayout = mQuad2DIL.resolve(device);
+            support.vertexShader = mQuad2DVS.resolve(device);
+        }
+
         support.geometryShader = nullptr;
         support.vertexWriteFunction = Write2DVertices;
     }
@@ -756,7 +774,8 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source,
                               const gl::Rectangle *scissor,
                               GLenum destFormat,
                               GLenum filter,
-                              bool maskOffAlpha)
+                              bool maskOffAlpha,
+                              unsigned int instanceCount)
 {
     gl::Error error = initResources();
     if (error.isError())
@@ -772,20 +791,25 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source,
     D3D11_SHADER_RESOURCE_VIEW_DESC sourceSRVDesc;
     source->GetDesc(&sourceSRVDesc);
 
+    D3D11_RENDER_TARGET_VIEW_DESC destRTVDesc;
+    dest->GetDesc(&destRTVDesc);
+
     const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(sourceSRVDesc.Format);
     const gl::InternalFormat &internalFormatInfo = gl::GetInternalFormatInfo(dxgiFormatInfo.internalFormat);
 
     bool isSigned = (internalFormatInfo.componentType == GL_INT);
     ShaderDimension dimension = (sourceSRVDesc.ViewDimension == D3D11_SRV_DIMENSION_TEXTURE3D) ? SHADER_3D : SHADER_2D;
 
+    const bool isInstanced = (instanceCount > 0 ? true : false);
+
     const Shader *shader = nullptr;
-    error = getBlitShader(destFormat, isSigned, dimension, &shader);
+    error = getBlitShader(destFormat, isSigned, dimension, isInstanced, &shader);
     if (error.isError())
     {
         return error;
     }
 
-    const ShaderSupport &support = getShaderSupport(*shader);
+    const ShaderSupport &support = getShaderSupport(*shader, isInstanced);
 
     // Set vertices
     D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -878,7 +902,12 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source,
     deviceContext->PSSetSamplers(0, 1, &sampler);
 
     // Draw the quad
-    deviceContext->Draw(drawCount, 0);
+    if (isInstanced) {
+        deviceContext->DrawInstanced(drawCount, instanceCount, 0, 0);
+    }
+    else {
+        deviceContext->Draw(drawCount, 0);
+    }
 
     // Unbind textures and render targets and vertex buffer
     mRenderer->setShaderResource(gl::SAMPLER_PIXEL, 0, nullptr);
@@ -1200,7 +1229,7 @@ void Blit11::clearShaderMap()
     mSwizzleShaderMap.clear();
 }
 
-gl::Error Blit11::getBlitShader(GLenum destFormat, bool isSigned, ShaderDimension dimension, const Shader **shader)
+gl::Error Blit11::getBlitShader(GLenum destFormat, bool isSigned, ShaderDimension dimension, bool isInstanced, const Shader **shader)
 {
     BlitShaderType blitShaderType = GetBlitShaderType(destFormat, isSigned, dimension);
 
@@ -1226,7 +1255,12 @@ gl::Error Blit11::getBlitShader(GLenum destFormat, bool isSigned, ShaderDimensio
         addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGBA2D, "Blit11 2D RGBA pixel shader"));
         break;
       case BLITSHADER_2D_BGRAF:
-        addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGBA2D, "Blit11 2D BGRA pixel shader"));
+          if (isInstanced) {
+              addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGBA2D_Instanced, "Blit11 2D BGRA pixel shader"));
+          }
+          else {
+              addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGBA2D, "Blit11 2D BGRA pixel shader"));
+          }
         break;
       case BLITSHADER_2D_RGBF:
         addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGB2D, "Blit11 2D RGB pixel shader"));

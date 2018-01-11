@@ -27,10 +27,6 @@
 #include "libANGLE/renderer/d3d/d3d11/texture_format_table.h"
 #include "third_party/trace_event/trace_event.h"
 
-// Precompiled shaders
-#include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthrough2d11vs.h"
-#include "libANGLE/renderer/d3d/d3d11/shaders/compiled/passthroughrgba2d11ps.h"
-
 #include "libANGLE/renderer/d3d/d3d11/winrt/DepthBufferPlaneFinder/DepthBufferPlaneFinder.h"
 
 
@@ -75,7 +71,7 @@ HolographicSwapChain11::HolographicSwapChain11(Renderer11 *renderer,
                          HolographicNativeWindow* nativeWindow,
                          HANDLE shareHandle,
                          ABI::Windows::Graphics::Holographic::IHolographicCamera* pCamera)
-    : SwapChainD3D(*((NativeWindow*)nativeWindow), shareHandle, GL_RGBA, GL_DEPTH_COMPONENT16),
+    : SwapChainD3D(*((NativeWindow*)nativeWindow), shareHandle, GL_RGBA8, GL_DEPTH_COMPONENT16),
       mHolographicNativeWindow(nativeWindow),
       mRenderer(renderer),
       mHolographicCamera(pCamera),

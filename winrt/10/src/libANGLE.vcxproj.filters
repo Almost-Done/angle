@@ -4661,5 +4661,11 @@
     <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\winrt\DepthBufferPlaneFinder\ReadBufferForLeastSquaresFit.h">
       <Filter>src\libANGLE\renderer\d3d\d3d11\winrt\DepthBufferPlaneFinder</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\shaders\compiled\passthrough2d11vs-Instanced.h">
+      <Filter>src\libANGLE\renderer\d3d\d3d11\shaders\compiled</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\libANGLE\renderer\d3d\d3d11\shaders\compiled\passthroughrgba2d11ps-Instanced.h">
+      <Filter>src\libANGLE\renderer\d3d\d3d11\shaders\compiled</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
