@@ -21,7 +21,8 @@ void VS_Passthrough2D_Instanced(in float2  inPosition :    POSITION, in float2  
 
 float4 PS_PassthroughRGBA2D_Instanced(in float4 inPosition : SV_POSITION, in float2 inTexCoord : TEXCOORD0, in unsigned int inRtaIndex : SV_RenderTargetArrayIndex) : SV_TARGET0
 {
-    return TextureF.Sample(Sampler, inTexCoord).rgba;
+    float2 texCoord = float2((float)inRtaIndex / 2 + inTexCoord.x / 2, inTexCoord.y);
+    return TextureF.Sample(Sampler, texCoord).rgba;
 }
 
 

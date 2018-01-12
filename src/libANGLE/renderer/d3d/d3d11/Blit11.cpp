@@ -1252,7 +1252,14 @@ gl::Error Blit11::getBlitShader(GLenum destFormat, bool isSigned, ShaderDimensio
     switch (blitShaderType)
     {
       case BLITSHADER_2D_RGBAF:
-        addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGBA2D, "Blit11 2D RGBA pixel shader"));
+          if (isInstanced)
+          {
+              addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGBA2D_Instanced, "Blit11 2D BGRA pixel shader"));
+          }
+          else
+          {
+              addBlitShaderToMap(blitShaderType, SHADER_2D, d3d11::CompilePS(device, g_PS_PassthroughRGBA2D, "Blit11 2D RGBA pixel shader"));
+          }
         break;
       case BLITSHADER_2D_BGRAF:
           if (isInstanced) {

@@ -539,7 +539,7 @@ EGLint HolographicSwapChain11::updateHolographicRenderingParameters()
             }
 
             // A new depth stencil view is also needed.
-            return resetOffscreenBuffers(
+            resetOffscreenBuffers(
                 static_cast<EGLint>(mRenderTargetSize.Width),
                 static_cast<EGLint>(mRenderTargetSize.Height));
         }
