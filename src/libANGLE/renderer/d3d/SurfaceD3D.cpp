@@ -83,6 +83,11 @@ void SurfaceD3D::releaseSwapChain()
     // when this is compiled for Windows Holographic.
 #ifndef ANGLE_ENABLE_WINDOWS_HOLOGRAPHIC
     SafeDelete(mSwapChain);
+#else
+    if (!mNativeWindow.isHolographic())
+    {
+        SafeDelete(mSwapChain);
+    }
 #endif
 }
 
