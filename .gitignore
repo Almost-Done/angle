@@ -1,6 +1,7 @@
 *.Makefile
 *.ncb
 *.suo
+/**/.vs/*
 /**/build/*.sln
 /**/build/*.vcxproj
 /**/build/*.vcxproj.filters
